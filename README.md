@@ -27,7 +27,7 @@ docker run -p 8080:8080 coqstoq-full poetry run gunicorn coqstoq.checker_server.
 2. Calling the verification server
 ```
 Once the verification engine is started, you can call it (from the host machine) through requests like the following:
-curl -X POST http://localhost:8001/check_problem_solution   -H "Content-Type: application/json"   -d '{
+curl -X POST http://localhost:8080/check_problem_solution   -H "Content-Type: application/json"   -d '{
     "problem_id": "val:0",
     "solution": "Proof. Qed."
 }'
