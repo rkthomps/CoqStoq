@@ -27,18 +27,10 @@ docker run -p 8080:8080 coqstoq-full poetry run gunicorn coqstoq.checker_server.
 2. Calling the verification server
 ```
 Once the verification engine is started, you can call it (from the host machine) through requests like the following:
-curl -X POST http://localhost:8080 \
-  -H "Content-Type: application/json" \
-  -d '{
-        "jsonrpc": "2.0",
-        "method": "check_proof",
-        "params": {
-          "split": "val",
-          "idx": 0,
-          "coqstoq_loc": ".",
-          "proof": "Proof. Qed.", "timeout": 120},
-        "id": 1
-      }'
+curl -X POST http://localhost:8001/check_problem_solution   -H "Content-Type: application/json"   -d '{
+    "problem_id": "val:0",
+    "solution": "Proof. Qed."
+}'
 ```
 
 3. **You should follow [example.py](example.py) for an example of calling the verification server programatically**. It shows how to call the server in parallel on the first 50 ground truth solutions from the train-sft split.  

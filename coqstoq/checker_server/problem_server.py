@@ -4,7 +4,7 @@ Single-threaded server for handindling verification of a
 single problem at a time.
 """
 
-
+from __future__ import annotations
 from typing import Any, Optional, Literal
 import sys, os
 import time
@@ -68,6 +68,14 @@ class CheckResult:
             "score": self.score,
             "messages": self.messages,
         }
+    
+    @classmethod
+    def from_json(cls, json_obj: Any) -> CheckResult:
+        score = json_obj["score"]
+        return cls(
+            score=score,
+            messages=json_obj["messages"],
+        )
 
 
 @dispatcher.add_method

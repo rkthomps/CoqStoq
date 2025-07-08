@@ -54,26 +54,18 @@ def load_checking_result(json_obj: Any) -> CheckingResult:
 
 
 def check_proof(split: str, idx: int, proof: str) -> CheckingResult:
-    url = f"http://localhost:8080"
+    url = f"http://localhost:8080/check_problem_solution"
     session = requests.Session()
     request: Any = {
-        "jsonrpc": "2.0",
-        "method": "check_proof",
-        "params": {
-            "split": split,
-            "idx": idx,
-            "coqstoq_loc": COQSTOQ_LOC,
-            "proof": proof,
-            "timeout": TIMEOUT,
-        },
-        "id": 1,
+        "problem_id": f"{split}:{idx}",
+        "solution": proof,
     }
 
     try:
         response = session.post(url, json=request, timeout=TIMEOUT)
         if response.status_code != 200:
             return ErrorResult(error=f"Server did not respond with 200 OK: {response.status_code}")
-        result_json = response.json()["result"]
+        result_json = response.json()
         return load_checking_result(result_json) 
     except ConnectionError as e:
         logger.error("Connection error while checking proof. Its likely that the server is not running.")
@@ -98,6 +90,7 @@ class Task:
         )
 
 def check_ground_truth(task: Task) -> None:
+    logger.info(f"Checking proof for example {task.split} with index {task.idx}")
     result = check_proof(task.split, task.idx, task.ground_truth)
     match result:
         case ErrorResult(error=err):

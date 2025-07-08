@@ -1,9 +1,11 @@
+from __future__ import annotations
 from typing import Any, Optional, Literal
 import sys, os
 import time
 import math
 import socket
 import argparse
+import json
 from dataclasses import dataclass
 from pathlib import Path
 from werkzeug.wrappers import Request, Response
@@ -12,15 +14,17 @@ import subprocess
 import multiprocessing as mp
 
 from werkzeug.serving import run_simple
+from werkzeug.wrappers import Request, Response
 from threading import Lock
 import requests
-from jsonrpc import JSONRPCResponseManager, dispatcher
+# from jsonrpc import JSONRPCResponseManager, dispatcher
 
+from coqstoq.checker_server.problem_server import CheckResult
+from coqstoq.interface import ProblemId, ProblemIdError
 
-@dataclass(frozen=True, eq=True)
-class ProblemId:
-    split: str
-    idx: int
+COQSTOQ_LOC = Path.cwd()
+TIMEOUT = 120
+
 
 
 class Counter:
@@ -241,48 +245,102 @@ def remove_server(server: CoqProblemServer, problem_id: ProblemId) -> None:
 
 
 
-@dispatcher.add_method
-def check_proof(split: str, idx: int, coqstoq_loc: str, proof: str, timeout: int) -> Any: 
+@dataclass(frozen=True, eq=True)
+class ReturnValue:
+    return_code: Literal[0, -1, -2] # 0 for OK, -1 for timeout, -2 for internal error
+    score: float
+    messages: list[str]
+
+    def to_json(self) -> Any:
+        return {
+            "return_code": self.return_code,
+            "score": self.score,
+            "messages": self.messages,
+        }
+
+
+
+def check_problem_solution(problem_id: str, solution: str) -> ReturnValue:
     server: Optional[CoqProblemServer] = None  
+    try:
+        pid = ProblemId.from_id_str(problem_id)
+    except ProblemIdError as e:
+        return ReturnValue(
+            return_code=-2,
+            score=-1,
+            messages=[f"Invalid problem_id format: {e}"]
+
+        )
     while server is None:
-        server = get_client(split, idx, Path(coqstoq_loc))
+        server = get_client(pid.split, pid.idx, COQSTOQ_LOC)
         if server is None:
             time.sleep(0.1)
         else:
             if not server.check_health(): 
                 teardown_server(server)
-                remove_server(server, ProblemId(split, idx))
+                remove_server(server, pid)
                 server.lock.release()
                 logging.warning(
-                    f"Server for {split}:{idx} at port {server.port} is not healthy. Restarting."
+                    f"Server for {pid.split}:{pid.idx} at port {server.port} is not healthy. Restarting."
                 )
                 server = None
     try:
-        response = server.send_request(proof, timeout)
+        response = server.send_request(solution, TIMEOUT)
         if response.status_code != 200:
-            return {
-                "score": -1,
-                "messages": [
+            return ReturnValue(
+                return_code=-2,
+                score=0,
+                messages=[
                     f"Internal server error: {response.text}"
                 ]
-            }
-        return response.json()["result"]
+            )
+        check_result = CheckResult.from_json(response.json()["result"])
+        return ReturnValue(
+            return_code=0,
+            score=check_result.score,
+            messages=check_result.messages
+        )
 
     except CoqServerTimeoutError as e:
-        return {
-            "score": -1,
-            "messages": [f"Coq server request timed out: {e}"]
-        }
+        return ReturnValue(
+            return_code=-1,
+            score=0,
+            messages=[f"Coq server request timed out: {e}"]
+        )
     
     finally:
         server.last_used = counter.thump()
         server.lock.release()
 
 
+
 @Request.application
-def application(request: requests.models.Response):
-    response = JSONRPCResponseManager.handle(request.data, dispatcher)
-    return Response(response.json, mimetype="application/json")
+def application(request: Request):
+    if request.path != "/check_problem_solution":
+        return Response(
+            "Invalid endpoint. Use /check_problem_solution.", status=404, mimetype="text/plain"
+        )
+    if request.method != "POST":
+        return Response(
+            "Only POST requests are allowed.", status=405, mimetype="text/plain"
+        )
+    
+    try:
+        request_data = request.get_json(force=True)
+        problem_id = request_data["problem_id"]
+        solution = request_data["solution"]
+        result = check_problem_solution(problem_id, solution)
+        return Response(
+            json.dumps(result.to_json(), indent=2),
+            status=200,
+            mimetype="application/json"
+        )
+    except:
+        return Response(
+            "Invalid JSON format or missing parameters.",
+            status=400,
+            mimetype="text/plain"
+        )
 
 
 if __name__ == "__main__":
