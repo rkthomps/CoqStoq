@@ -83,7 +83,7 @@ def check_proof(proof: str) -> CheckResult:
     assert theorem is not None, "Theorem must be set before running the server."
     assert coqstoq_loc is not None, "CoqStoq location must be set before running the server."
     assert client is not None, "Client must be set before running the server."
-    check_contents = strip_qed(get_lsp_check_contents(theorem, proof, coqstoq_loc))
+    check_contents = get_lsp_check_contents(theorem, strip_qed(proof), coqstoq_loc)
     err_msgs = do_check(check_contents)
     if len(err_msgs) == 0:
         return CheckResult(score=1, messages=[]).to_json()
