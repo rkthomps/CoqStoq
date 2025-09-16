@@ -85,7 +85,7 @@ def run_build(instructions: BuildInstructions):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Build CoqStoq projects on your machine.")
-    default_num_jobs = math.ceil(mp.cpu_count() / N_JOBS_PER_BUILD * 2)
+    default_num_jobs = math.ceil(mp.cpu_count() / N_JOBS_PER_BUILD / 2)
     parser.add_argument("--n_jobs", type=int, default=default_num_jobs)
     args = parser.parse_args()
 
