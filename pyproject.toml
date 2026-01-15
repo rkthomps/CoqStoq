@@ -1,24 +1,32 @@
-[tool.poetry]
+
+[project]
 name = "coqstoq"
 version = "0.1.0"
 description = "A benchmark for evaluating automatic proof search tools for Coq."
-authors = ["Kyle Thompson <r7thompson@ucsd.edu>"]
-readme = "README.md"
+authors = [{ name = "Kyle Thompson", email = "r7thompson@ucsd.edu" }]
+requires-python = ">=3.11, <4.0"
 
-[tool.poetry.dependencies]
-python = "^3.11"
-coqpyt = { path = "coqpyt" }
-pyyaml = "^6.0.2"
+dependencies = [
+    "pyyaml >=6.0.2",
+    "coqpyt"
+]
 
-[tool.poetry.group.dev.dependencies]
-black = "^24.8.0"
-ipdb = "^0.13.13"
-ipython = "^8.28.0"
-ipykernel = "6.29.5"
-pyright = "^1.1.400"
 
-[tool.poetry.group.test.dependencies]
-pytest = "^8.3.3"
+[project.optional-dependencies]
+dev = [
+    "black >=24.8.0",
+    "ipdb >=0.13.13",
+    "ipython >=8.28.0",
+    "ipykernel ==6.29.5",
+    "pyright >=1.1.400",
+]
+
+test = ["pytest >=8.3.3"]
+
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
 minversion = "8.3.3"
@@ -28,10 +36,9 @@ log_cli_level = "INFO"
 log_cli_format = "%(asctime)s %(levelname)s %(message)s"
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
 [tool.pyright]
 exclude = ["raw-data", "data", "models", "results"]
 extraPaths = ["coqpyt"]
+
+[tool.uv.sources]
+coqpyt = { path = "./coqpyt" }

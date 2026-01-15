@@ -4,8 +4,7 @@ Benchmark for evaluating Coq proof search tools.
 ## Installation
 **Requirements**:
 - opam >= 2.1.2 (previous versions are untested)
-- poetry >= 1.8.3 (previous versions are untested) 
-- python >= 3.11 (previous versions are untested)
+- uv >= 0.8.22 (previous versions untested)
 
 1. Clone this repository and its submodules:
 ```
@@ -15,8 +14,8 @@ git clone git@github.com:rkthomps/CoqStoq --recurse-submodules
 2. Build and initialize the CoqStoq python environment:
 ```
 cd CoqStoq
-poetry install
-poetry shell
+uv sync --uv sync --all-extras
+source .venv/bin/activate
 ```
 
 2. Install the CoqStoq opam switch
@@ -26,7 +25,7 @@ opam switch import coqstoq.opam --switch=coqstoq --repos=default,coq-released=ht
 
 3. Build the CoqStoq repositories 
 ```
-python3 coqstoq/build_projects.py
+python3 -m coqstoq.build_projects
 ```
 
 4. Check your setup (from the project root directory)
@@ -109,11 +108,11 @@ Suppose you want to add two projects, "bar" and "baz" to CoqStoq.
   ```
 - Third, you must find the theorems to evaluate on. You can do this by running
   ```bash
-  python3 coqstoq/find_eval_thms.py --custom-split-name foo
+  python3 -m coqstoq.find_eval_thms --custom-split-name foo
   ```
 - Fourth, you must shuffle the split. You can do this as follows: 
   ```bash
-   python3 coqstoq/create_theorem_lists.py foo
+   python3 -m coqstoq.create_theorem_lists foo
    ```
 
 

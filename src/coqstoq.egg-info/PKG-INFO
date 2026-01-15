@@ -1,0 +1,16 @@
+Metadata-Version: 2.4
+Name: coqstoq
+Version: 0.1.0
+Summary: A benchmark for evaluating automatic proof search tools for Coq.
+Author-email: Kyle Thompson <r7thompson@ucsd.edu>
+Requires-Python: <4.0,>=3.11
+Requires-Dist: pyyaml>=6.0.2
+Requires-Dist: coqpyt
+Provides-Extra: dev
+Requires-Dist: black>=24.8.0; extra == "dev"
+Requires-Dist: ipdb>=0.13.13; extra == "dev"
+Requires-Dist: ipython>=8.28.0; extra == "dev"
+Requires-Dist: ipykernel==6.29.5; extra == "dev"
+Requires-Dist: pyright>=1.1.400; extra == "dev"
+Provides-Extra: test
+Requires-Dist: pytest>=8.3.3; extra == "test"
