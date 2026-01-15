@@ -14,7 +14,7 @@ git clone git@github.com:rkthomps/CoqStoq --recurse-submodules
 2. Build and initialize the CoqStoq python environment:
 ```
 cd CoqStoq
-uv sync --uv sync --all-extras
+uv sync --all-extras
 source .venv/bin/activate
 ```
 
